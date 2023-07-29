@@ -1,21 +1,45 @@
 import React, {useEffect} from 'react';
 import {Image, StyleSheet, View} from 'react-native';
 import {color} from '../../../core/config/color';
-import {NavigationProp, useNavigation} from '@react-navigation/native';
-import {AuthNavigationParam} from '../../../app/navigation/AppNavigation';
+import {
+  CommonActions,
+  NavigationProp,
+  useNavigation,
+} from '@react-navigation/native';
+import {AppNavigationParam} from '../../../app/navigation/AppNavigation';
 import {AppRouts} from '../../../app/navigation/routes';
+import useStorageValue from '../../../core/hooks/useStorageValue';
+import {tokenKey} from '../../../core/constants/localStorsge';
 
 const SplashScreen = () => {
-  const {navigate} =
-    useNavigation<
-      NavigationProp<AuthNavigationParam, AppRouts.SPLASH_SCREEN>
-    >();
+  const {navigate, dispatch} =
+    useNavigation<NavigationProp<AppNavigationParam, AppRouts.SPLASH_SCREEN>>();
+
+  const [token, loading] = useStorageValue(tokenKey);
 
   useEffect(() => {
-    setTimeout(() => {
-      navigate(AppRouts.AUTH);
-    }, 2000);
-  }, []);
+    if (loading == false) {
+      if (token != null) {
+        setTimeout(() => {
+          dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{name: AppRouts.TAB_NAVIGATOR}],
+            }),
+          );
+        }, 2000);
+      } else {
+        setTimeout(() => {
+          dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{name: AppRouts.AUTH}],
+            }),
+          );
+        }, 2000);
+      }
+    }
+  }, [token, loading]);
   return (
     <View style={styles.container}>
       <Image

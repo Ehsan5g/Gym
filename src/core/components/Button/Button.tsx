@@ -22,6 +22,7 @@ export type ButtonProps = {
   iconRight?: string;
   iconLeft?: string;
   opacityBackground?: number;
+  onPress: () => void;
 };
 
 const Button = (prop: ButtonProps): JSX.Element => {
@@ -37,6 +38,7 @@ const Button = (prop: ButtonProps): JSX.Element => {
     iconLeft,
     transparent,
     iconRight,
+    onPress,
     ...rest
   } = prop;
 
@@ -44,12 +46,17 @@ const Button = (prop: ButtonProps): JSX.Element => {
 
   return (
     <StyledButton
+      onPress={() => {
+        onPress();
+      }}
       style={{
         ...styles.button,
         backgroundColor: backgroundColor ?? pallet.secondary,
       }}>
       {loading ? (
-        <ActivityIndicator color={pallet.white} />
+        <ActivityIndicator
+          color={backgroundColor ? pallet.primary : pallet.white}
+        />
       ) : (
         <>
           {iconLeft && (

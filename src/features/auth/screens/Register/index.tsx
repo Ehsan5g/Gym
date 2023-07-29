@@ -11,23 +11,29 @@ import {
 import {color} from '../../../../core/config/color';
 import Icon from '../../../../core/components/Icon';
 import Button from '../../../../core/components/Button';
+import {register} from '../../api/auth';
+import {AxiosError} from 'axios';
+import Toast from 'react-native-toast-message';
 import {
   CommonActions,
   NavigationProp,
   useNavigation,
 } from '@react-navigation/native';
-import {AuthRouts} from '../../navigation/routes';
-import {login} from '../../api/auth';
-import {useUser} from '../../../../core/provider/UserProvider';
 import {AppRouts} from '../../../../app/navigation/routes';
+import {useUser} from '../../../../core/provider/UserProvider';
+import {AppNavigationParam} from '../../../../app/navigation/AppNavigation';
 
-const Login = () => {
-  const {navigate, dispatch} = useNavigation<NavigationProp<any>>();
+type Props = {};
+const Register = () => {
+  const {setUser, setToken} = useUser();
 
-  const {setToken, setUser} = useUser();
+  const {dispatch} = useNavigation<NavigationProp<AppNavigationParam>>();
 
   const [username, setUsername] = useState<string | undefined>(undefined);
   const [password, setPassword] = useState<string | undefined>(undefined);
+  const [confirmPassword, setConfirmPassword] = useState<string | undefined>(
+    undefined,
+  );
 
   const [usernameError, setUsernameError] = useState<string | undefined>(
     undefined,
@@ -35,15 +41,19 @@ const Login = () => {
   const [passwordError, setPasswordError] = useState<string | undefined>(
     undefined,
   );
+  const [confirmPasswordError, setConfirmPasswordError] = useState<
+    string | undefined
+  >(undefined);
 
   const [loading, setLoading] = useState(false);
 
-  const onLogin = async () => {
+  const onRegister = async () => {
     setLoading(true);
     try {
-      const data = await login({
+      const data = await register({
         username: username as string,
         password: password as string,
+        confirmPassword: confirmPassword as string,
       });
       await setUser({
         id: data?.id,
@@ -60,7 +70,11 @@ const Login = () => {
         }),
       );
     } catch (error: any) {
-      console.log(error?.response?.data);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error?.response?.data?.message,
+      });
     } finally {
       setLoading(false);
     }
@@ -75,6 +89,10 @@ const Login = () => {
       setPasswordError('please enter password');
       isValid = false;
     }
+    if (password != confirmPassword) {
+      setConfirmPasswordError('password and confirm password is not matching');
+      isValid = false;
+    }
 
     return isValid;
   };
@@ -84,9 +102,10 @@ const Login = () => {
     if (!isValid) {
       return false;
     } else {
-      await onLogin();
+      await onRegister();
     }
   };
+
   return (
     <ScrollView showsVerticalScrollIndicator={false} style={styles.container}>
       <View style={styles.headerContainer}>
@@ -95,10 +114,10 @@ const Login = () => {
           source={require('../../../../app/assets/img/logo.png')}
           resizeMode={'center'}
         />
-        <Text style={styles.title}>Welcome!</Text>
+        <Text style={styles.title}>Register</Text>
         <Text
           style={{...styles.text, textAlign: 'center', paddingHorizontal: 35}}>
-          Use the following credentials to log in to your account
+          Please create a username and password for yourself
         </Text>
       </View>
       <View style={{marginBottom: 16}}>
@@ -125,11 +144,11 @@ const Login = () => {
           <Icon name={'key'} size={34} />
           <TextInput
             placeholder={'Password'}
-            secureTextEntry={true}
             onChangeText={text => {
               setPasswordError(undefined);
               setPassword(text);
             }}
+            secureTextEntry={true}
             value={password}
             placeholderTextColor={color.textSecondary}
             style={styles.input}
@@ -140,20 +159,30 @@ const Login = () => {
         )}
       </View>
 
+      <View style={{marginBottom: 16}}>
+        <View style={styles.inputContainer}>
+          <Icon name={'key'} size={34} />
+          <TextInput
+            placeholder={'Confirm password'}
+            onChangeText={text => {
+              setConfirmPasswordError(undefined);
+              setConfirmPassword(text);
+            }}
+            secureTextEntry={true}
+            value={confirmPassword}
+            placeholderTextColor={color.textSecondary}
+            style={styles.input}
+          />
+        </View>
+        {confirmPasswordError != undefined && (
+          <Text style={{...styles.error}}>{confirmPasswordError}</Text>
+        )}
+      </View>
       <Button
-        onPress={() => {
-          onSubmit();
+        onPress={async () => {
+          await onSubmit();
         }}
         loading={loading}
-        title={'login'}
-      />
-      <Text style={{...styles.text, fontSize: 12, textAlign: 'center'}}>
-        Don't have an account?
-      </Text>
-      <Button
-        onPress={() => {
-          navigate(AuthRouts.REGISTER);
-        }}
         backgroundColor={color.primarySecondary}
         color={color.white}
         title={'Register'}
@@ -212,4 +241,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Login;
+export default Register;
